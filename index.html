@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scrim · Beautiful focus for Mac</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+  /* ---------- dark theme (default) ---------- */
+  :root{
+    --ink:#EAEEF6; --muted:#9AA2B2; --faint:#6A7280;
+    --accent:#F2B33D; --accent-bright:#FFD27A;
+    --line:rgba(255,255,255,.10);
+    --glass:rgba(18,21,28,.74); --glass-border:rgba(255,255,255,.16);
+    --field:rgba(255,255,255,.06);
+    --btn-bg:#F2B33D; --btn-text:#241A09;
+    --win-surface:#1A1E27; --win-bar:rgba(40,45,56,.92); --win-line:rgba(255,255,255,.06);
+    --block:rgba(255,255,255,.13); --card:rgba(255,255,255,.045);
+    --tab:rgba(255,255,255,.05); --tab-text:rgba(255,255,255,.5);
+    --tab-active:#11141B; --tab-active-text:rgba(255,255,255,.8);
+    --dock:rgba(255,255,255,.10); --dock-line:rgba(255,255,255,.16);
+    --menu-text:rgba(255,255,255,.96);
+    --bar-track:rgba(255,255,255,.10);
+    --tier-bg:rgba(255,255,255,.025);
+    --free-border:rgba(242,179,61,.42); --free-bg:rgba(242,179,61,.10);
+    --focus-tint:rgba(242,179,61,.11);
+    --glow:rgba(242,179,61,.22);
+    --ui:"Inter", system-ui, -apple-system, sans-serif;
+    --display:"Newsreader", Georgia, serif;
+    --chrome:-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  }
+  /* ---------- light theme ---------- */
+  body.light{
+    --ink:#1B1B19; --muted:#5C5C57; --faint:#8E8E87;
+    --accent:#DA6A1E; --accent-bright:#B5530F;
+    --line:rgba(0,0,0,.10);
+    --glass:rgba(250,250,248,.74); --glass-border:rgba(0,0,0,.12);
+    --field:rgba(0,0,0,.04);
+    --btn-bg:#DA6A1E; --btn-text:#FFFFFF;
+    --win-surface:#F4F4F2; --win-bar:rgba(233,233,230,.95); --win-line:rgba(0,0,0,.06);
+    --block:rgba(0,0,0,.13); --card:rgba(0,0,0,.035);
+    --tab:rgba(0,0,0,.04); --tab-text:rgba(0,0,0,.5);
+    --tab-active:#FFFFFF; --tab-active-text:rgba(0,0,0,.8);
+    --dock:rgba(255,255,255,.55); --dock-line:rgba(0,0,0,.12);
+    --menu-text:rgba(0,0,0,.82);
+    --bar-track:rgba(0,0,0,.08);
+    --tier-bg:rgba(0,0,0,.025);
+    --free-border:rgba(218,106,30,.42); --free-bg:rgba(218,106,30,.08);
+    --focus-tint:rgba(218,106,30,.08);
+    --glow:rgba(218,106,30,.16);
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0}
+  html,body{height:100%}
+  body{
+    font-family:var(--ui); color:var(--ink); overflow:hidden; background:#05060A;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  }
+
+  .screen{position:fixed; inset:0; overflow:hidden}
+
+  /* sharp wallpaper, sits beneath everything */
+  .wallpaper{
+    position:absolute; inset:0; transition:background .5s ease;
+    background:
+      radial-gradient(1100px 720px at 72% 18%, #34405C 0%, transparent 58%),
+      radial-gradient(900px 700px at 18% 88%, #1E2A44 0%, transparent 60%),
+      linear-gradient(160deg, #232C40 0%, #141A28 46%, #090C14 100%);
+  }
+  body.light .wallpaper{
+    background:
+      radial-gradient(1100px 720px at 74% 16%, #F1F0ED 0%, transparent 58%),
+      radial-gradient(900px 700px at 16% 90%, #ECEBE7 0%, transparent 60%),
+      linear-gradient(160deg, #EFEEEB 0%, #DEDDD9 50%, #CFCEC9 100%);
+  }
+  .wallpaper::after{
+    content:""; position:absolute; inset:0; opacity:.05; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* the layer Scrim softly defocuses: blurred app windows. Spans the full screen and runs
+     up beneath the transparent menu bar, so there is no hard seam at the top.
+     Only the blur lives here; dimming is handled by the veil so it can differ by theme. */
+  .behind{position:absolute; inset:0; z-index:10; filter:blur(10px) saturate(.95)}
+
+  /* the dimming veil: dims the whole defocused scene, with a top fade that blends into the menu bar */
+  .veil{
+    position:absolute; inset:0; z-index:20; pointer-events:none; transition:background .5s ease;
+    background:
+      linear-gradient(180deg, rgba(6,8,13,.40) 0%, rgba(6,8,13,0) 15%),
+      radial-gradient(900px 680px at 50% 45%, rgba(6,8,13,.46) 0%, rgba(6,8,13,.56) 48%, rgba(3,4,8,.78) 100%);
+  }
+  body.light .veil{
+    background:
+      linear-gradient(180deg, rgba(244,244,242,.5) 0%, rgba(244,244,242,0) 15%),
+      radial-gradient(900px 680px at 50% 45%, rgba(245,245,243,.40) 0%, rgba(243,243,240,.48) 48%, rgba(226,226,222,.64) 100%);
+  }
+
+  /* ===== menu bar: macOS 26 (Tahoe) transparent glass, no divider ===== */
+  .menubar{
+    position:absolute; top:0; left:0; right:0; height:30px; z-index:60;
+    display:flex; align-items:center; gap:22px; padding:0 17px;
+    font-family:var(--chrome); font-size:13.5px; color:var(--menu-text);
+    text-shadow:0 0 10px rgba(0,0,0,.28); transition:background .5s ease, color .3s ease;
+    background:linear-gradient(180deg, rgba(8,10,16,.32) 0%, rgba(8,10,16,.12) 55%, rgba(8,10,16,0) 100%);
+  }
+  body.light .menubar{
+    text-shadow:none;
+    background:linear-gradient(180deg, rgba(250,251,253,.6) 0%, rgba(250,251,253,.2) 55%, rgba(250,251,253,0) 100%);
+  }
+  .menubar .apple{width:15px; height:17px; display:block}
+  .menubar .mb-app{font-weight:700}
+  .menubar .mb-menu{display:flex; gap:19px; opacity:.92; font-weight:500}
+  .menubar .mb-right{margin-left:auto; display:flex; align-items:center; gap:16px}
+  .menubar .mb-right svg{display:block}
+  .menubar .clock{font-variant-numeric:tabular-nums; letter-spacing:.01em; font-weight:500}
+  #themeBtn{cursor:pointer; display:flex; align-items:center; -webkit-user-select:none; user-select:none; transition:transform .2s}
+  #themeBtn:hover{transform:scale(1.12)}
+  #themeBtn .sun{display:none}
+  body.light #themeBtn .sun{display:block}
+  body.light #themeBtn .moon{display:none}
+  @media (max-width:720px){ .menubar .mb-menu{display:none} }
+
+  /* ---- background app windows (decorative, blurred) ---- */
+  .win{position:absolute; border-radius:14px; overflow:hidden; background:var(--win-surface);
+    border:1px solid var(--win-line); box-shadow:0 30px 80px rgba(0,0,0,.5)}
+  .wbar{height:34px; display:flex; align-items:center; gap:8px; padding:0 12px;
+    background:var(--win-bar); border-bottom:1px solid var(--win-line)}
+  .lights{display:flex; gap:7px}
+  .lights i{width:11px; height:11px; border-radius:50%; display:block}
+  .lights .r{background:#FF5F57} .lights .y{background:#FEBC2E} .lights .g{background:#28C840}
+  .wtitle{font-family:var(--chrome); font-size:12px; color:var(--muted); font-weight:500}
+
+  .w-browser{width:790px; height:516px; left:3%; top:7%}
+  .tabstrip{display:flex; gap:5px; padding:7px 10px 0; background:var(--win-bar); overflow:hidden}
+  .tab{font-family:var(--chrome); font-size:11px; color:var(--tab-text); background:var(--tab);
+    padding:6px 11px; border-radius:7px 7px 0 0; white-space:nowrap; display:flex; gap:6px; align-items:center}
+  .tab.active{background:var(--tab-active); color:var(--tab-active-text)}
+  .tab .badge{background:#FF5F57; color:#fff; font-size:9px; padding:0 5px; border-radius:8px; font-weight:700}
+  .urlbar{margin:8px 10px; height:26px; background:var(--field); border-radius:8px}
+  .feed{padding:4px 14px; display:grid; gap:11px}
+  .feedcard{background:var(--card); border-radius:10px; padding:12px; display:grid; gap:8px}
+  .ln{height:9px; border-radius:5px; background:var(--block)}
+  .ln.s{width:40%} .ln.m{width:68%} .ln.l{width:88%}
+  .thumb{height:78px; border-radius:8px; background:var(--block); opacity:.7}
+
+  .w-chat{width:374px; height:404px; right:4%; top:10%}
+  .chatwrap{display:flex; height:calc(100% - 34px)}
+  .chatside{width:96px; background:var(--win-bar); padding:10px 8px; display:grid; gap:9px; align-content:start}
+  .chrow{height:8px; border-radius:5px; background:var(--block)}
+  .chrow.on{background:var(--accent); opacity:.85}
+  .chatmain{flex:1; padding:12px; display:grid; gap:10px; align-content:start}
+  .bub{max-width:78%; padding:9px 11px; border-radius:12px; background:var(--card); display:grid; gap:6px}
+  .bub.me{justify-self:end; background:var(--focus-tint)}
+  .pingbadge{position:absolute; top:24px; right:14px; background:#FF5F57; color:#fff; font-size:11px;
+    font-weight:800; padding:2px 8px; border-radius:11px; font-family:var(--chrome)}
+
+  .w-mail{width:380px; height:250px; left:9%; bottom:-4%}
+  .mailrow{display:flex; gap:10px; align-items:center; padding:11px 14px; border-bottom:1px solid var(--win-line)}
+  .maildot{width:8px; height:8px; border-radius:50%; background:var(--accent); flex:none}
+  .maildot.read{background:transparent}
+  .mailcol{flex:1; display:grid; gap:7px}
+
+  .dock{position:absolute; left:50%; bottom:10px; transform:translateX(-50%); display:flex; gap:11px;
+    padding:8px 13px; border-radius:20px; background:var(--dock); border:1px solid var(--dock-line)}
+  .dock i{width:42px; height:42px; border-radius:11px; display:block}
+
+  /* ============ the focused window (crisp) ============ */
+  .focus{
+    position:absolute; z-index:40; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:min(462px, 92vw); border-radius:26px; overflow:hidden;
+    background:var(--glass); backdrop-filter:blur(40px) saturate(1.3);
+    -webkit-backdrop-filter:blur(40px) saturate(1.3);
+    border:1px solid var(--glass-border); transition:background .5s ease, border-color .3s ease;
+    box-shadow:0 1px 0 rgba(255,255,255,.16) inset,
+               0 40px 110px rgba(0,0,0,.55),
+               0 0 0 1px rgba(0,0,0,.18),
+               0 0 90px -10px var(--glow);
+  }
+  /* Tahoe toolbar: floating glass, no hard divider, centered title */
+  .f-bar{position:relative; height:44px; display:flex; align-items:center; gap:8px; padding:0 16px;
+    background:linear-gradient(180deg, rgba(255,255,255,.07) 0%, rgba(255,255,255,.015) 100%)}
+  body.light .f-bar{background:linear-gradient(180deg, rgba(0,0,0,.035) 0%, rgba(0,0,0,0) 100%)}
+  .f-bar .wtitle{position:absolute; left:0; right:0; text-align:center; pointer-events:none;
+    color:var(--muted); font-weight:600; letter-spacing:.005em}
+  .f-body{padding:24px 28px 24px}
+
+  .brandrow{display:flex; align-items:center; gap:10px}
+  .mark{width:27px; height:27px; flex:none; filter:drop-shadow(0 4px 8px rgba(0,0,0,.35))}
+  .wordmark{font-family:var(--display); font-weight:400; font-size:26px; letter-spacing:.01em; color:var(--ink); line-height:1}
+  .brandtag{margin-left:auto; font-size:11.5px; color:var(--faint); letter-spacing:.02em}
+
+  .headline{font-family:var(--display); font-weight:300; font-size:33px; line-height:1.12;
+    letter-spacing:-.005em; margin:22px 0 13px; color:var(--ink)}
+  .headline em{font-style:italic; color:var(--accent-bright)}
+  .sub{color:var(--muted); font-size:15px; line-height:1.6; margin-bottom:24px}
+
+  .tiers{display:grid; gap:9px; margin-bottom:22px}
+  .tier{border:1px solid var(--line); border-radius:12px; padding:13px 15px; background:var(--tier-bg)}
+  .tier-top{display:flex; align-items:baseline; justify-content:space-between; gap:10px}
+  .tier-rank{font-size:11px; letter-spacing:.13em; text-transform:uppercase; color:var(--faint); font-weight:700}
+  .tier-offer{font-family:var(--display); font-size:18px; color:var(--ink)}
+  .tier-price{display:flex; align-items:baseline; gap:8px; font-size:12.5px; color:var(--muted); margin-top:7px}
+  .tier-price .now{color:var(--ink); font-weight:600}
+  .tier-price .was{text-decoration:line-through; opacity:.6}
+  .tier.active{border-color:var(--free-border); background:var(--free-bg); box-shadow:0 0 28px -12px var(--glow)}
+  .tier.active .tier-offer{color:var(--accent-bright)}
+  .tier.done{opacity:.55}
+  .tag-filled{font-family:var(--ui); font-size:10px; font-weight:700; letter-spacing:.10em; text-transform:uppercase;
+    color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:2px 9px}
+  .duo{display:grid; grid-template-columns:1fr 1fr; gap:9px}
+  .duo .tier{padding:13px 14px; display:flex; flex-direction:column; gap:8px}
+  .duo .tier-offer{font-size:16px}
+  .duo .tier-price{margin-top:0}
+
+  .bar{height:6px; border-radius:6px; background:var(--bar-track); margin:12px 0 8px; overflow:hidden}
+  .bar span{display:block; height:100%; border-radius:6px; background:linear-gradient(90deg,var(--accent),var(--accent-bright))}
+  .barlabel{display:flex; align-items:center; gap:7px; font-size:11.5px; color:var(--muted); font-weight:500}
+  .pulse{width:7px; height:7px; border-radius:50%; background:#5fd08a; box-shadow:0 0 0 0 rgba(95,208,138,.6); animation:pulse 2.2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(95,208,138,.55)}70%{box-shadow:0 0 0 7px rgba(95,208,138,0)}100%{box-shadow:0 0 0 0 rgba(95,208,138,0)}}
+
+  .form{display:flex; gap:9px}
+  .form input{flex:1; min-width:0; height:46px; padding:0 16px; border-radius:12px; background:var(--field);
+    border:1px solid var(--line); color:var(--ink); font-family:var(--ui); font-size:14.5px; outline:none;
+    transition:border-color .2s, background .2s}
+  .form input::placeholder{color:var(--faint)}
+  .form input:focus{border-color:var(--accent); background:var(--focus-tint)}
+  .form input.err{border-color:#FF6B63; animation:shake .35s}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+  .form button{height:46px; padding:0 22px; border:none; border-radius:12px; cursor:pointer; background:var(--btn-bg);
+    color:var(--btn-text); font-family:var(--ui); font-weight:700; font-size:14.5px; white-space:nowrap;
+    transition:transform .18s, box-shadow .25s, filter .2s}
+  .form button:hover{transform:translateY(-2px); filter:brightness(1.06); box-shadow:0 10px 26px -10px rgba(0,0,0,.4)}
+  .form button:active{transform:translateY(0)}
+  .micro{margin-top:14px; font-size:11.5px; color:var(--faint); text-align:center; letter-spacing:.01em}
+
+  .success{display:none; padding:32px 30px 28px; text-align:center}
+  .success.show{display:block; animation:fade .5s ease both}
+  @keyframes fade{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
+  .tick{width:56px; height:56px; border-radius:50%; margin:0 auto 18px; display:grid; place-items:center;
+    background:rgba(95,208,138,.16); border:1px solid rgba(95,208,138,.4)}
+  .tick svg{width:27px; height:27px}
+  .s-pos{font-family:var(--display); font-weight:300; font-size:32px; color:var(--ink); line-height:1.1}
+  .s-tier{margin:14px auto 8px; display:inline-block; padding:7px 17px; border-radius:999px; font-weight:700; font-size:13px}
+  .s-tier.free{background:var(--free-bg); color:var(--accent-bright); border:1px solid var(--free-border)}
+  .s-tier.disc{background:var(--card); color:var(--ink); border:1px solid var(--line)}
+  .s-price{display:flex; align-items:baseline; gap:8px; justify-content:center; font-size:13.5px; color:var(--muted); margin:2px 0 0}
+  .s-price .now{color:var(--ink); font-weight:700; font-size:17px}
+  .s-price .was{text-decoration:line-through; opacity:.6}
+  .s-msg{color:var(--muted); font-size:14.5px; line-height:1.6; max-width:35ch; margin:8px auto 22px}
+  .s-msg strong{color:var(--ink); font-weight:600}
+  .s-foot{font-size:11.5px; color:var(--faint)}
+
+  @media (prefers-reduced-motion: no-preference){
+    .focus{animation:popIn .9s cubic-bezier(.16,.84,.3,1) both}
+    .behind{animation:behindIn 1.3s ease both}
+    .veil{animation:veilIn 1.3s ease both}
+    @keyframes popIn{0%{opacity:0; transform:translate(-50%,-46%) scale(.965)}100%{opacity:1; transform:translate(-50%,-50%) scale(1)}}
+    @keyframes behindIn{from{filter:blur(0) saturate(1)}to{filter:blur(10px) saturate(.95)}}
+    @keyframes veilIn{from{opacity:0}to{opacity:1}}
+  }
+
+  @media (max-width:720px){
+    .w-chat,.w-mail{display:none}
+    .w-browser{left:-10%; top:5%; width:520px}
+    .f-body{padding:20px 20px 20px}
+    .headline{font-size:28px}
+  }
+</style>
+</head>
+<body>
+<div class="screen">
+  <div class="wallpaper"></div>
+
+  <!-- blurred, dimmed desktop: everything Scrim quiets -->
+  <div class="behind">
+    <div class="win w-browser">
+      <div class="wbar"><span class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></span></div>
+      <div class="tabstrip">
+        <span class="tab active">X / Home</span>
+        <span class="tab">YouTube</span>
+        <span class="tab">Reddit</span>
+        <span class="tab">Hacker News</span>
+        <span class="tab">Gmail <span class="badge">47</span></span>
+        <span class="tab">Amazon</span>
+        <span class="tab">ESPN</span>
+        <span class="tab">Notion</span>
+        <span class="tab">Figma</span>
+      </div>
+      <div class="urlbar"></div>
+      <div class="feed">
+        <div class="feedcard"><div class="ln s"></div><div class="ln l"></div><div class="ln m"></div></div>
+        <div class="feedcard"><div class="thumb"></div><div class="ln m"></div><div class="ln s"></div></div>
+        <div class="feedcard"><div class="ln l"></div><div class="ln m"></div></div>
+      </div>
+    </div>
+
+    <div class="win w-chat">
+      <div class="wbar"><span class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></span></div>
+      <span class="pingbadge">9</span>
+      <div class="chatwrap">
+        <div class="chatside"><span class="chrow on"></span><span class="chrow"></span><span class="chrow"></span><span class="chrow"></span><span class="chrow"></span><span class="chrow"></span></div>
+        <div class="chatmain">
+          <div class="bub"><div class="ln m"></div><div class="ln s"></div></div>
+          <div class="bub me"><div class="ln s"></div></div>
+          <div class="bub"><div class="ln l"></div><div class="ln m"></div></div>
+          <div class="bub me"><div class="ln m"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="win w-mail">
+      <div class="wbar"><span class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></span><span class="wtitle">Inbox, 23 unread</span></div>
+      <div class="mailrow"><span class="maildot"></span><div class="mailcol"><div class="ln s"></div><div class="ln l"></div></div></div>
+      <div class="mailrow"><span class="maildot"></span><div class="mailcol"><div class="ln m"></div><div class="ln l"></div></div></div>
+      <div class="mailrow"><span class="maildot read"></span><div class="mailcol"><div class="ln s"></div><div class="ln m"></div></div></div>
+    </div>
+
+    <div class="dock">
+      <i style="background:linear-gradient(160deg,#5C97F4,#2E63C8)"></i>
+      <i style="background:linear-gradient(160deg,#52C893,#2E9468)"></i>
+      <i style="background:linear-gradient(160deg,#F2768E,#C84E70)"></i>
+      <i style="background:linear-gradient(160deg,#F6B73C,#E0892E)"></i>
+      <i style="background:linear-gradient(160deg,#9586EC,#5B4CC9)"></i>
+      <i style="background:linear-gradient(160deg,#646E82,#3C4454)"></i>
+    </div>
+  </div>
+
+  <div class="veil"></div>
+
+  <!-- ===== menu bar ===== -->
+  <div class="menubar">
+    <svg class="apple" viewBox="0 0 14 17" fill="currentColor"><path d="M11.7 9.04c-.02-1.78 1.45-2.63 1.52-2.67-.83-1.21-2.12-1.38-2.58-1.4-1.1-.11-2.14.64-2.7.64-.55 0-1.41-.62-2.32-.61-1.2.02-2.3.69-2.91 1.76-1.24 2.15-.32 5.33.89 7.07.59.85 1.29 1.81 2.21 1.77.89-.04 1.22-.57 2.3-.57 1.07 0 1.37.57 2.31.55.95-.02 1.56-.87 2.14-1.72.67-.99.95-1.94.96-1.99-.02-.01-1.84-.71-1.86-2.8zM9.93 3.8c.49-.59.82-1.42.73-2.24-.71.03-1.56.47-2.06 1.06-.45.52-.84 1.36-.74 2.16.79.06 1.59-.4 2.07-.98z"/></svg>
+    <span class="mb-app">Scrim</span>
+    <span class="mb-menu"><span>File</span><span>Edit</span><span>Session</span><span>View</span><span>Window</span><span>Help</span></span>
+    <span class="mb-right">
+      <div id="themeBtn" role="button" aria-label="Toggle light or dark appearance" title="Toggle appearance">
+        <svg class="moon" width="15" height="15" viewBox="0 0 15 15" fill="currentColor"><path d="M13 9.4A5.6 5.6 0 015.6 2 5.6 5.6 0 1013 9.4z"/></svg>
+        <svg class="sun" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="8" cy="8" r="3.1"/><path d="M8 1.4v1.6M8 13v1.6M14.6 8H13M3 8H1.4M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1M12.6 12.6l-1.1-1.1M4.5 4.5L3.4 3.4"/></svg>
+      </div>
+      <!-- Wi-Fi (arcs, heavier stroke) -->
+      <svg width="18" height="13" viewBox="0 0 18 13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+        <path d="M2.78 4.78 A8.8 8.8 0 0 1 15.22 4.78"/>
+        <path d="M4.83 6.83 A5.9 5.9 0 0 1 13.17 6.83"/>
+        <path d="M6.88 8.88 A3 3 0 0 1 11.12 8.88"/>
+        <circle cx="9" cy="10.7" r="1.05" fill="currentColor" stroke="none"/>
+      </svg>
+      <!-- Battery -->
+      <svg width="25" height="12" viewBox="0 0 26 13" fill="none"><rect x="1" y="2.2" width="21" height="8.6" rx="2.6" stroke="currentColor" stroke-width="1.1" stroke-opacity=".9"/><rect x="2.6" y="3.8" width="8" height="5.4" rx="1.3" fill="currentColor"/><rect x="23" y="4.7" width="1.8" height="3.6" rx="1" fill="currentColor" fill-opacity=".9"/></svg>
+      <!-- Control Center (two toggles) -->
+      <svg width="15" height="13" viewBox="0 0 16 14" fill="none"><rect x="1.2" y="1.4" width="13.6" height="4.8" rx="2.4" stroke="currentColor" stroke-width="1.1"/><circle cx="11.4" cy="3.8" r="1.5" fill="currentColor"/><rect x="1.2" y="7.8" width="13.6" height="4.8" rx="2.4" stroke="currentColor" stroke-width="1.1"/><circle cx="4.6" cy="10.2" r="1.5" fill="currentColor"/></svg>
+      <span class="clock">Mon Jun 1&nbsp;&nbsp;13:17</span>
+    </span>
+  </div>
+
+  <!-- ===== the focused window ===== -->
+  <section class="focus" role="dialog" aria-label="Join the Scrim waitlist">
+    <div class="f-bar">
+      <span class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></span>
+      <span class="wtitle">Scrim · Early Access</span>
+    </div>
+
+    <div class="f-body" id="formView">
+      <div class="brandrow">
+        <svg class="mark" viewBox="0 0 100 100">
+          <defs>
+            <clipPath id="mc"><path d="M100 50q0 25-12.5 37.5T50 100 12.5 87.5 0 50 12.5 12.5 50 0t37.5 12.5T100 50Z"/></clipPath>
+            <linearGradient id="mg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A4150"/><stop offset=".55" stop-color="#23272F"/><stop offset="1" stop-color="#14161B"/></linearGradient>
+            <radialGradient id="mb" cx="50%" cy="42%" r="34%"><stop offset="0" stop-color="#CFE0F4" stop-opacity=".9"/><stop offset="1" stop-color="#CFE0F4" stop-opacity="0"/></radialGradient>
+            <linearGradient id="mp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".24"/><stop offset="1" stop-color="#fff" stop-opacity=".06"/></linearGradient>
+          </defs>
+          <g clip-path="url(#mc)">
+            <rect width="100" height="100" fill="url(#mg)"/>
+            <circle cx="50" cy="42" r="22" fill="url(#mb)"/>
+            <rect x="0" y="40" width="100" height="60" fill="url(#mp)"/>
+            <line x1="0" y1="40" x2="100" y2="40" stroke="#fff" stroke-opacity=".4"/>
+            <circle cx="50" cy="40" r="6" fill="#EAF1FB" opacity=".92"/>
+          </g>
+        </svg>
+        <span class="wordmark">Scrim</span>
+        <span class="brandtag">Beautiful focus for Mac</span>
+      </div>
+
+      <h1 class="headline">Everything else <em>fades away.</em></h1>
+      <p class="sub">Scrim softly dims every window, tab, and notification but the one in front of you. What is left is calm, clear, and entirely yours to think in.</p>
+
+      <div class="tiers" id="tiers"></div>
+
+      <div class="form">
+        <input type="text" id="hp" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0">
+        <input type="email" id="email" inputmode="email" autocomplete="email" placeholder="you@example.com" aria-label="Your email address">
+        <button id="join" type="button">Join the waitlist</button>
+      </div>
+      <p class="micro">No spam, just one quiet email when Scrim arrives. Expected July 2026, made for macOS 15 and later.</p>
+    </div>
+
+    <div class="success" id="successView">
+      <div class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="#5fd08a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+      <div class="s-pos">You're on the list.</div>
+      <div class="s-tier free" id="tierBadge">Free, forever</div>
+      <div class="s-price" id="sPrice"></div>
+      <p class="s-msg" id="sMsg"></p>
+      <p class="s-foot">Scrim is expected this July. Keep an eye on your inbox.</p>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  /* ============================================================
+     SCRIM WAITLIST — configuration
+     ------------------------------------------------------------
+     LIVE / AUTOMATED: paste your Google Apps Script web-app URL
+     into ENDPOINT (see DEPLOY.md). The page then reads the live
+     signup count and writes new signups to your Google Sheet,
+     filling the progress bar and highlighting the correct plan
+     all on its own.
+
+     MANUAL: leave ENDPOINT as "" and just set `signups` to the
+     number of people who have joined. Everything else (the bar
+     and the highlighted plan) is derived from that one number,
+     so updating is a one-line change.
+     ============================================================ */
+  const CONFIG = {
+    ENDPOINT: "",          // e.g. "https://script.google.com/macros/s/AKfy.../exec"
+    signups: 0,            // manual count, used when ENDPOINT is empty
+
+    freeSeats: 50,         // first N people: free
+    halfSeats: 300,        // next N people: 50% off
+    currency: "$",
+    price: 9.99,           // regular price
+    halfPrice: 4.99,       // shown for the 50% off tier
+    laterPrice: 6.99       // shown for the 30% off tier
+  };
+
+  /* ---------- helpers ---------- */
+  const $ = id => document.getElementById(id);
+  const state = { count: CONFIG.signups };
+  const money = n => CONFIG.currency + Number(n).toFixed(2);
+  const FREE = () => CONFIG.freeSeats;
+  const HALFCAP = () => CONFIG.freeSeats + CONFIG.halfSeats;
+
+  function activeTier(c){ return c < FREE() ? "free" : c < HALFCAP() ? "half" : "later"; }
+  function statusLabel(f){ return f >= 0.8 ? "Almost full" : f >= 0.45 ? "Filling up fast" : "Just opened"; }
+  function tiers(){
+    return {
+      free:  { rank:"The first 50", offer:"Free, forever", now:null,              was:CONFIG.price },
+      half:  { rank:"The next 300", offer:"50% off",       now:CONFIG.halfPrice,  was:CONFIG.price },
+      later: { rank:"After that",   offer:"30% off",       now:CONFIG.laterPrice, was:CONFIG.price }
+    };
+  }
+  function priceHTML(d){
+    return d.now === null
+      ? '<div class="tier-price"><span class="was">'+money(d.was)+'</span><span>free in early access</span></div>'
+      : '<div class="tier-price"><span class="now">'+money(d.now)+'</span><span class="was">'+money(d.was)+'</span></div>';
+  }
+
+  /* ---------- render the three plans from the current count ---------- */
+  function renderTiers(){
+    const t = tiers(), c = state.count, active = activeTier(c);
+    const done = { free: c >= FREE(), half: c >= HALFCAP(), later: false };
+
+    // hero = the plan the next signup falls into
+    const h = t[active];
+    let bar;
+    if(active === "later"){
+      bar = '<div class="barlabel"><span class="pulse"></span>Open to everyone</div>';
+    } else {
+      const cap  = active === "free" ? FREE() : CONFIG.halfSeats;
+      const into = active === "free" ? c : (c - FREE());
+      const f = Math.max(0.06, Math.min(1, into / cap));
+      bar = '<div class="bar"><span style="width:'+(f*100).toFixed(0)+'%"></span></div>'
+          + '<div class="barlabel"><span class="pulse"></span>'+statusLabel(f)+'</div>';
+    }
+    let html = '<div class="tier active">'
+      + '<div class="tier-top"><span class="tier-rank">'+h.rank+'</span><span class="tier-offer">'+h.offer+'</span></div>'
+      + priceHTML(h) + bar + '</div>';
+
+    // the remaining two plans as small cards, in natural order
+    html += '<div class="duo">';
+    ["free","half","later"].filter(k => k !== active).forEach(k => {
+      const d = t[k];
+      html += '<div class="tier'+(done[k] ? ' done' : '')+'">'
+        + '<div class="tier-rank">'+d.rank+'</div>'
+        + '<div class="tier-offer">'+d.offer+'</div>'
+        + (done[k] ? '<div class="tier-price"><span class="tag-filled">Filled</span></div>' : priceHTML(d))
+        + '</div>';
+    });
+    html += '</div>';
+
+    $("tiers").innerHTML = html;
+  }
+
+  /* ---------- success ---------- */
+  function showSuccess(seat){
+    const t = tiers();
+    const key = seat <= FREE() ? "free" : seat <= HALFCAP() ? "half" : "later";
+    const d = t[key], badge = $("tierBadge"), price = $("sPrice"), msg = $("sMsg");
+    if(key === "free"){
+      badge.textContent = "Free, forever"; badge.className = "s-tier free";
+      price.innerHTML = '<span class="was">'+money(d.was)+'</span><span>free in early access</span>';
+      msg.innerHTML = "You are one of our first 50. Your free copy of Scrim will be waiting for you the day it ships.";
+    } else if(key === "half"){
+      badge.textContent = "50% off"; badge.className = "s-tier disc";
+      price.innerHTML = '<span class="now">'+money(d.now)+'</span><span class="was">'+money(d.was)+'</span>';
+      msg.innerHTML = "You got in early. We will email your <strong>50% off</strong> code the day Scrim ships.";
+    } else {
+      badge.textContent = "30% off"; badge.className = "s-tier disc";
+      price.innerHTML = '<span class="now">'+money(d.now)+'</span><span class="was">'+money(d.was)+'</span>';
+      msg.innerHTML = "You are on the list. We will email your <strong>30% off</strong> code the day Scrim ships.";
+    }
+    $("formView").style.display = "none";
+    $("successView").classList.add("show");
+  }
+
+  /* ---------- read the live count on load ---------- */
+  async function loadCount(){
+    if(CONFIG.ENDPOINT){
+      try{
+        const r = await fetch(CONFIG.ENDPOINT, { method:"GET" });
+        const d = await r.json();
+        if(d && typeof d.count === "number") state.count = d.count;
+      }catch(e){ /* keep the manual fallback */ }
+    }
+    renderTiers();
+  }
+
+  /* ---------- join ---------- */
+  const emailEl = $("email");
+  const valid = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+
+  async function join(){
+    if($("hp").value) return;                 // honeypot: ignore bots
+    const v = emailEl.value.trim();
+    if(!valid(v)){
+      emailEl.classList.add("err"); emailEl.focus();
+      setTimeout(()=>emailEl.classList.remove("err"), 400);
+      return;
+    }
+    const btn = $("join"), label = btn.textContent;
+    btn.disabled = true; btn.textContent = "Joining…";
+
+    if(CONFIG.ENDPOINT){
+      try{
+        const r = await fetch(CONFIG.ENDPOINT, {
+          method:"POST",
+          headers:{ "Content-Type":"text/plain;charset=utf-8" },  // avoids CORS preflight
+          body: JSON.stringify({ email: v })
+        });
+        const d = await r.json();
+        state.count = (d && typeof d.count === "number") ? d.count : state.count + 1;
+      }catch(e){ state.count += 1; }
+    } else {
+      state.count += 1;                        // local demo when no backend
+    }
+
+    renderTiers();
+    showSuccess(state.count);
+    btn.disabled = false; btn.textContent = label;
+  }
+
+  $("join").addEventListener("click", join);
+  emailEl.addEventListener("keydown", e => { if(e.key === "Enter") join(); });
+
+  /* ---------- live clock, system format e.g. Mon Jun 1  13:17 (24-hour) ---------- */
+  function renderClock(){
+    const d = new Date();
+    const wd = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getDay()];
+    const mo = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()];
+    const mm = String(d.getMinutes()).padStart(2,"0");
+    document.querySelector(".clock").textContent = wd + " " + mo + " " + d.getDate() + "\u00A0\u00A0" + d.getHours() + ":" + mm;
+  }
+  renderClock();
+  setInterval(renderClock, 10000);
+
+  /* ---------- open in the right appearance: dark 9PM–8AM, light through the day ---------- */
+  (function(){
+    const hr = new Date().getHours();
+    if(!(hr >= 21 || hr < 8)) document.body.classList.add("light");
+  })();
+  $("themeBtn").addEventListener("click", () => document.body.classList.toggle("light"));
+
+  /* ---------- boot ---------- */
+  renderTiers();   // instant paint with the manual count
+  loadCount();     // then override with the live count if ENDPOINT is set
+</script>
+</body>
+</html>
