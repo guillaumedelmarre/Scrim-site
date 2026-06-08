@@ -555,7 +555,7 @@
     .grain {
       position: absolute;
       inset: 0;
-      z-index: 90;
+      z-index: 30;
       pointer-events: none;
       opacity: .16;
       mix-blend-mode: overlay;
@@ -935,6 +935,7 @@
     .signup {
       position: relative;
       border-radius: 999px;
+      isolation: isolate;
       animation: sweep 4.5s linear infinite;
     }
 
@@ -951,6 +952,8 @@
           transparent 360deg);
       filter: blur(13px);
       opacity: .9;
+      transform: translateZ(0);
+      will-change: transform;
     }
 
     .signup-ring {
