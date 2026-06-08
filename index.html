@@ -1055,6 +1055,20 @@
       }
     }
 
+    /* Touch/mobile WebKit clips filter:blur layers (notably the bottom edge), so
+       drop the blurred bloom there and use a clean box-shadow glow instead.
+       The crisp sweeping border (no blur) stays. */
+    @media (hover: none) and (pointer: coarse),
+    (max-width: 560px) {
+      .signup::before {
+        display: none
+      }
+
+      .signup-ring {
+        box-shadow: 0 0 17px var(--btn-glow)
+      }
+    }
+
     .micro {
       margin-top: 14px;
       font-size: 11.5px;
