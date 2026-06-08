@@ -11,7 +11,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&display=swap"
     rel="stylesheet">
   <style>
-    /* ---------- dark theme (default) ---------- */
+
     :root {
       --ink: #EAEEF6;
       --muted: #9AA2B2;
@@ -52,12 +52,12 @@
       --cta-text: #10131A;
       --btn-glow: rgba(255, 255, 255, .5);
       --cta-ring: rgba(255, 255, 255, .4);
+      --err: #FF8A80;
       --ui: "Inter", system-ui, -apple-system, sans-serif;
       --display: "Newsreader", Georgia, serif;
       --chrome: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
     }
 
-    /* ---------- light theme ---------- */
     body.light {
       --ink: #1B1B19;
       --muted: #5C5C57;
@@ -98,6 +98,7 @@
       --cta-ring: rgba(218, 106, 30, .4);
       --phase-accent: #B5530F;
       --phase-bar: linear-gradient(90deg, #DA6A1E, #B5530F);
+      --err: #C0392B;
     }
 
     * {
@@ -126,7 +127,6 @@
       overflow: hidden
     }
 
-    /* sharp wallpaper, sits beneath everything */
     .wallpaper {
       position: absolute;
       inset: 0;
@@ -153,9 +153,6 @@
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     }
 
-    /* the layer Scrim softly defocuses: blurred app windows. Spans the full screen and runs
-     up beneath the transparent menu bar, so there is no hard seam at the top.
-     Only the blur lives here; dimming is handled by the veil so it can differ by theme. */
     .behind {
       position: absolute;
       inset: 0;
@@ -163,7 +160,6 @@
       filter: blur(10px) saturate(.95)
     }
 
-    /* the dimming veil: dims the whole defocused scene, with a top fade that blends into the menu bar */
     .veil {
       position: absolute;
       inset: 0;
@@ -181,7 +177,6 @@
         radial-gradient(900px 680px at 50% 45%, rgba(245, 245, 243, .40) 0%, rgba(243, 243, 240, .48) 48%, rgba(226, 226, 222, .64) 100%);
     }
 
-    /* ===== menu bar: macOS 26 (Tahoe) transparent glass, no divider ===== */
     .menubar {
       position: absolute;
       top: 0;
@@ -294,7 +289,6 @@
       }
     }
 
-    /* ---- background app windows (decorative, blurred) ---- */
     .win {
       position: absolute;
       border-radius: 14px;
@@ -563,7 +557,6 @@
       background-size: 200px 200px;
     }
 
-    /* ============ the focused window (crisp) ============ */
     .center {
       position: absolute;
       inset: 0;
@@ -633,7 +626,6 @@
       fill: currentColor;
     }
 
-    /* Tahoe toolbar: floating glass, no hard divider, centered title */
     .f-bar {
       position: relative;
       height: 44px;
@@ -925,7 +917,6 @@
       }
     }
 
-    /* glowing signup field: email + button in one pill, a light sweeping the border (request 3) */
     @property --sweep {
       syntax: "<angle>";
       initial-value: 0deg;
@@ -940,7 +931,7 @@
     }
 
     .signup::before {
-      /* moving glow bloom, sits behind the field */
+
       content: "";
       position: absolute;
       inset: -3px;
@@ -957,7 +948,7 @@
     }
 
     .signup-ring {
-      /* the crisp animated gradient border */
+
       position: relative;
       border-radius: 999px;
       padding: 1.5px;
@@ -1045,6 +1036,28 @@
       box-shadow: 0 0 0 2px var(--cta-ring)
     }
 
+    #cfWidget {
+      display: flex;
+      justify-content: center;
+      margin-top: 12px
+    }
+
+    #cfWidget:empty {
+      display: none
+    }
+
+    .formmsg {
+      margin-top: 11px;
+      text-align: center;
+      font-size: 13px;
+      line-height: 1.4;
+      color: var(--err)
+    }
+
+    .formmsg:empty {
+      display: none
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .signup {
         animation: none
@@ -1055,9 +1068,6 @@
       }
     }
 
-    /* Touch/mobile WebKit clips filter:blur layers (notably the bottom edge), so
-       drop the blurred bloom there and use a clean box-shadow glow instead.
-       The crisp sweeping border (no blur) stays. */
     @media (hover: none) and (pointer: coarse),
     (max-width: 560px) {
       .signup::before {
@@ -1334,7 +1344,6 @@
   <div class="screen">
     <div class="wallpaper"></div>
 
-    <!-- blurred, dimmed desktop: everything Scrim quiets -->
     <div class="behind">
       <div class="win w-browser">
         <div class="wbar"><span class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></span></div>
@@ -1418,7 +1427,7 @@
       </div>
 
       <div class="dock">
-        <!-- Finder -->
+
         <svg viewBox="0 0 100 100">
           <defs>
             <linearGradient id="icF" x1="0" y1="0" x2="1" y2="0">
@@ -1431,7 +1440,7 @@
           <ellipse cx="62" cy="40" rx="4.5" ry="9" fill="#ffffff" />
           <path d="M33 63 Q50 76 67 63" stroke="#0E3F73" stroke-width="5" fill="none" stroke-linecap="round" />
         </svg>
-        <!-- Launchpad -->
+
         <svg viewBox="0 0 100 100">
           <rect width="100" height="100" rx="23" fill="#ECEEF3" />
           <rect x="22" y="22" width="16" height="16" rx="4" fill="#FF5A52" />
@@ -1444,7 +1453,7 @@
           <rect x="42" y="62" width="16" height="16" rx="4" fill="#AF52DE" />
           <rect x="62" y="62" width="16" height="16" rx="4" fill="#FF2D92" />
         </svg>
-        <!-- Safari -->
+
         <svg viewBox="0 0 100 100">
           <defs>
             <radialGradient id="icS" cx="0.5" cy="0.42" r="0.7">
@@ -1457,7 +1466,7 @@
           <path d="M50 50 L68 32 L57 43 Z" fill="#FF3B30" />
           <path d="M50 50 L32 68 L43 57 Z" fill="#ffffff" />
         </svg>
-        <!-- Notes -->
+
         <svg viewBox="0 0 100 100">
           <defs>
             <clipPath id="icN">
@@ -1472,7 +1481,7 @@
             <rect x="20" y="72" width="40" height="5" rx="2.5" fill="#E5E5DE" />
           </g>
         </svg>
-        <!-- FaceTime -->
+
         <svg viewBox="0 0 100 100">
           <defs>
             <linearGradient id="icT" x1="0" y1="0" x2="0" y2="1">
@@ -1484,14 +1493,14 @@
           <rect x="25" y="36" width="35" height="28" rx="7" fill="#ffffff" />
           <path d="M64 44 L77 35 L77 65 L64 56 Z" fill="#ffffff" />
         </svg>
-        <!-- Reminders -->
+
         <svg viewBox="0 0 100 100">
           <rect width="100" height="100" rx="23" fill="#FDFDFD" />
           <circle cx="50" cy="35" r="6.5" fill="#FF3B30" />
           <circle cx="64" cy="59" r="6.5" fill="#FF9F0A" />
           <circle cx="36" cy="59" r="6.5" fill="#0A84FF" />
         </svg>
-        <!-- Photos -->
+
         <svg viewBox="0 0 100 100">
           <rect width="100" height="100" rx="23" fill="#FFFFFF" />
           <g transform="translate(50,50)">
@@ -1510,7 +1519,6 @@
 
     <div class="veil"></div>
 
-    <!-- ===== menu bar ===== -->
     <div class="menubar">
       <svg class="apple" viewBox="0 0 14 17" fill="currentColor">
         <path
@@ -1531,7 +1539,7 @@
               d="M8 1.4v1.6M8 13v1.6M14.6 8H13M3 8H1.4M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1M12.6 12.6l-1.1-1.1M4.5 4.5L3.4 3.4" />
           </svg>
         </div>
-        <!-- Wi-Fi (arcs, heavier stroke) -->
+
         <svg width="18" height="13" viewBox="0 0 18 13" fill="none" stroke="currentColor" stroke-width="1.7"
           stroke-linecap="round">
           <path d="M2.78 4.78 A8.8 8.8 0 0 1 15.22 4.78" />
@@ -1539,14 +1547,14 @@
           <path d="M6.88 8.88 A3 3 0 0 1 11.12 8.88" />
           <circle cx="9" cy="10.7" r="1.05" fill="currentColor" stroke="none" />
         </svg>
-        <!-- Battery -->
+
         <svg width="25" height="12" viewBox="0 0 26 13" fill="none">
           <rect x="1" y="2.2" width="21" height="8.6" rx="2.6" stroke="currentColor" stroke-width="1.1"
             stroke-opacity=".9" />
           <rect x="2.6" y="3.8" width="8" height="5.4" rx="1.3" fill="currentColor" />
           <rect x="23" y="4.7" width="1.8" height="3.6" rx="1" fill="currentColor" fill-opacity=".9" />
         </svg>
-        <!-- Control Center (two toggles) -->
+
         <svg width="15" height="13" viewBox="0 0 16 14" fill="none">
           <rect x="1.2" y="1.4" width="13.6" height="4.8" rx="2.4" stroke="currentColor" stroke-width="1.1" />
           <circle cx="11.4" cy="3.8" r="1.5" fill="currentColor" />
@@ -1557,7 +1565,6 @@
       </span>
     </div>
 
-    <!-- ===== the focused window ===== -->
     <div class="center">
       <section class="focus" role="dialog" aria-label="Join the Scrim waitlist">
       <div class="f-bar">
@@ -1620,6 +1627,8 @@
           <input type="text" id="hp" name="company" tabindex="-1" autocomplete="off" aria-hidden="true"
             style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0">
         </div>
+        <p class="formmsg" id="formMsg" role="alert"></p>
+        <div id="cfWidget"></div>
         <p class="micro">No spam, we'll only use your email to send you your offer code, that's all.</p>
       </div>
 
@@ -1651,33 +1660,20 @@
   </div>
 
   <script>
-    /* ============================================================
-       SCRIM WAITLIST — configuration
-       ------------------------------------------------------------
-       LIVE / AUTOMATED: paste your Google Apps Script web-app URL
-       into ENDPOINT (see DEPLOY.md). The page then reads the live
-       signup count and writes new signups to your Google Sheet,
-       filling the progress bar and highlighting the correct plan
-       all on its own.
-  
-       MANUAL: leave ENDPOINT as "" and just set `signups` to the
-       number of people who have joined. Everything else (the bar
-       and the highlighted plan) is derived from that one number,
-       so updating is a one-line change.
-       ============================================================ */
-    const CONFIG = {
-      ENDPOINT: "https://script.google.com/macros/s/AKfycbx_-GhMkIZDwoSg8CDThcLQBHopG56uf2WmqgANqnINHvdmnH5yRVn1oixL6bfS-C92/exec",          // e.g. "https://script.google.com/macros/s/AKfy.../exec"
-      signups: 0,            // manual count, used when ENDPOINT is empty
 
-      freeSeats: 100,        // first N people: free
-      halfSeats: 300,        // next N people: 60% off
+    const CONFIG = {
+      ENDPOINT: "https://script.google.com/macros/s/AKfycbx_-GhMkIZDwoSg8CDThcLQBHopG56uf2WmqgANqnINHvdmnH5yRVn1oixL6bfS-C92/exec",
+      TURNSTILE_SITEKEY: "0x4AAAAAADgvv5y_Jr9Ib_l2",
+      signups: 0,
+
+      freeSeats: 100,
+      halfSeats: 300,
       currency: "$",
-      price: 9.99,           // regular price
-      halfPrice: 3.99,       // shown for the 60% off tier
-      laterPrice: 6.99       // shown for the 30% off tier
+      price: 9.99,
+      halfPrice: 3.99,
+      laterPrice: 6.99
     };
 
-    /* ---------- helpers ---------- */
     const $ = id => document.getElementById(id);
     const state = { count: CONFIG.signups };
     const money = n => CONFIG.currency + Number(n).toFixed(2);
@@ -1699,12 +1695,10 @@
         : '<div class="tier-price"><span class="now">' + money(d.now) + '</span><span class="was">' + money(d.was) + '</span></div>';
     }
 
-    /* ---------- render the three plans from the current count ---------- */
     function renderTiers() {
       const t = tiers(), c = state.count, active = activeTier(c);
       const done = { free: c >= FREE(), half: c >= HALFCAP(), later: false };
 
-      // hero = the plan the next signup falls into
       const h = t[active];
       let bar;
       if (active === "later") {
@@ -1720,7 +1714,6 @@
         + '<div class="tier-top"><span class="tier-rank">' + h.rank + '</span><span class="tier-offer">' + h.offer + '</span></div>'
         + priceHTML(h) + bar + '</div>';
 
-      // the remaining two plans as small cards, in natural order
       html += '<div class="duo">';
       ["free", "half", "later"].filter(k => k !== active).forEach(k => {
         const d = t[k];
@@ -1735,7 +1728,6 @@
       $("tiers").innerHTML = html;
     }
 
-    /* ---------- success ---------- */
     function showSuccess(seat) {
       const t = tiers();
       const key = seat <= FREE() ? "free" : seat <= HALFCAP() ? "half" : "later";
@@ -1757,31 +1749,68 @@
       $("successView").classList.add("show");
     }
 
-    /* ---------- read the live count on load ---------- */
     async function loadCount() {
       if (CONFIG.ENDPOINT) {
         try {
           const r = await fetch(CONFIG.ENDPOINT, { method: "GET" });
           const d = await r.json();
           if (d && typeof d.count === "number") state.count = d.count;
-        } catch (e) { /* keep the manual fallback */ }
+        } catch (e) {  }
       }
       renderTiers();
     }
 
-    /* ---------- join ---------- */
     const emailEl = $("email");
     const valid = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
+    let cfToken = "", cfWidgetId = null;
+    function initTurnstile() {
+      if (!CONFIG.TURNSTILE_SITEKEY) return;
+      window.__cfRender = function () {
+        cfWidgetId = turnstile.render("#cfWidget", {
+          sitekey: CONFIG.TURNSTILE_SITEKEY,
+          theme: document.body.classList.contains("light") ? "light" : "dark",
+          size: "flexible",
+          "refresh-expired": "auto",
+          callback: t => { cfToken = t; },
+          "expired-callback": () => { cfToken = ""; },
+          "error-callback": () => { cfToken = ""; }
+        });
+      };
+      const s = document.createElement("script");
+      s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=__cfRender&render=explicit";
+      s.async = true; s.defer = true;
+      document.head.appendChild(s);
+    }
+
+    function shake() {
+      const f = $("signup");
+      f.classList.add("err"); emailEl.focus();
+      setTimeout(() => f.classList.remove("err"), 400);
+    }
+    function reject(m) {
+      $("formMsg").textContent = m;
+      shake();
+    }
+    function rejectMsg(code) {
+      if (code === "busy") return "We're getting a lot of signups right now, please try again in a minute.";
+      if (code === "verify") return "We couldn't verify that you're human. Please try again.";
+      if (code === "invalid") return "Please enter a valid email address.";
+      return "Something went wrong. Please try again.";
+    }
+
     async function join() {
-      if ($("hp").value) return;                 // honeypot: ignore bots
+      if ($("hp").value) return;
+      $("formMsg").textContent = "";
       const v = emailEl.value.trim();
-      if (!valid(v)) {
-        const f = $("signup");
-        f.classList.add("err"); emailEl.focus();
-        setTimeout(() => f.classList.remove("err"), 400);
-        return;
+      if (!valid(v)) { reject("Please enter a valid email address."); return; }
+
+      let token = "";
+      if (CONFIG.TURNSTILE_SITEKEY) {
+        token = cfToken || (window.turnstile && cfWidgetId !== null ? turnstile.getResponse(cfWidgetId) : "");
+        if (!token) { reject("Finishing a quick security check, please try again in a moment."); return; }
       }
+
       const btn = $("join"), label = btn.textContent;
       btn.disabled = true; btn.textContent = "Joining…";
 
@@ -1789,14 +1818,21 @@
         try {
           const r = await fetch(CONFIG.ENDPOINT, {
             method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },  // avoids CORS preflight
-            body: JSON.stringify({ email: v })
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ email: v, hp: $("hp").value, token: token })
           });
           const d = await r.json();
+          if (d && d.ok === false) {
+            if (CONFIG.TURNSTILE_SITEKEY && window.turnstile && cfWidgetId !== null) { cfToken = ""; turnstile.reset(cfWidgetId); }
+            btn.disabled = false; btn.textContent = label;
+            reject(rejectMsg(d.error));
+            return;
+          }
           state.count = (d && typeof d.count === "number") ? d.count : state.count + 1;
         } catch (e) { state.count += 1; }
+        if (CONFIG.TURNSTILE_SITEKEY && window.turnstile && cfWidgetId !== null) { cfToken = ""; turnstile.reset(cfWidgetId); }
       } else {
-        state.count += 1;                        // local demo when no backend
+        state.count += 1;
       }
 
       renderTiers();
@@ -1806,8 +1842,8 @@
 
     $("join").addEventListener("click", join);
     emailEl.addEventListener("keydown", e => { if (e.key === "Enter") join(); });
+    emailEl.addEventListener("input", () => { $("formMsg").textContent = ""; });
 
-    /* ---------- live clock, system format e.g. Mon Jun 1  13:17 (24-hour) ---------- */
     function renderClock() {
       const d = new Date();
       const wd = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.getDay()];
@@ -1818,16 +1854,15 @@
     renderClock();
     setInterval(renderClock, 10000);
 
-    /* ---------- open in the right appearance: dark 9PM–8AM, light through the day ---------- */
     (function () {
       const hr = new Date().getHours();
       if (!(hr >= 21 || hr < 8)) document.body.classList.add("light");
     })();
     $("themeBtn").addEventListener("click", () => document.body.classList.toggle("light"));
 
-    /* ---------- boot ---------- */
-    renderTiers();   // instant paint with the manual count
-    loadCount();     // then override with the live count if ENDPOINT is set
+    renderTiers();
+    loadCount();
+    initTurnstile();
   </script>
 </body>
 
