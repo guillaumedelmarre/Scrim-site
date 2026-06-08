@@ -38,10 +38,20 @@
       --menu-text: rgba(255, 255, 255, .96);
       --bar-track: rgba(255, 255, 255, .10);
       --tier-bg: rgba(255, 255, 255, .025);
-      --free-border: rgba(242, 179, 61, .42);
-      --free-bg: rgba(242, 179, 61, .10);
+      --free-border: rgba(255, 255, 255, .34);
+      --free-bg: rgba(255, 255, 255, .05);
       --focus-tint: rgba(242, 179, 61, .11);
-      --glow: rgba(242, 179, 61, .22);
+      --glow: rgba(255, 255, 255, .16);
+      --phase-accent: #FFFFFF;
+      --phase-bar: linear-gradient(90deg, #DFE4EC, #FFFFFF);
+      --field-bg: #0C0D11;
+      --ring-base: rgba(255, 255, 255, .12);
+      --ring-mid: rgba(255, 255, 255, .55);
+      --ring-hot: #FFFFFF;
+      --cta-bg: #FFFFFF;
+      --cta-text: #10131A;
+      --btn-glow: rgba(255, 255, 255, .5);
+      --cta-ring: rgba(255, 255, 255, .4);
       --ui: "Inter", system-ui, -apple-system, sans-serif;
       --display: "Newsreader", Georgia, serif;
       --chrome: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
@@ -55,7 +65,7 @@
       --accent: #DA6A1E;
       --accent-bright: #B5530F;
       --line: rgba(0, 0, 0, .10);
-      --glass: rgba(250, 250, 248, .74);
+      --glass: rgba(253, 253, 251, .85);
       --glass-border: rgba(0, 0, 0, .12);
       --field: rgba(0, 0, 0, .04);
       --btn-bg: #DA6A1E;
@@ -78,6 +88,16 @@
       --free-bg: rgba(218, 106, 30, .08);
       --focus-tint: rgba(218, 106, 30, .08);
       --glow: rgba(218, 106, 30, .16);
+      --field-bg: #FFFFFF;
+      --ring-base: rgba(0, 0, 0, .13);
+      --ring-mid: rgba(218, 106, 30, .6);
+      --ring-hot: #F0902E;
+      --cta-bg: #DA6A1E;
+      --cta-text: #FFFFFF;
+      --btn-glow: rgba(218, 106, 30, .5);
+      --cta-ring: rgba(218, 106, 30, .4);
+      --phase-accent: #B5530F;
+      --phase-bar: linear-gradient(90deg, #DA6A1E, #B5530F);
     }
 
     * {
@@ -173,6 +193,7 @@
       align-items: center;
       gap: 22px;
       padding: 0 17px;
+      white-space: nowrap;
       font-family: var(--chrome);
       font-size: 13.5px;
       color: var(--menu-text);
@@ -248,6 +269,28 @@
     @media (max-width:720px) {
       .menubar .mb-menu {
         display: none
+      }
+    }
+
+    @media (max-width:560px) {
+      .menubar {
+        gap: 12px;
+        padding: 0 12px;
+        font-size: 12.5px
+      }
+
+      .menubar .mb-right {
+        gap: 12px
+      }
+    }
+
+    @media (max-width:380px) {
+      .menubar .apple {
+        display: none
+      }
+
+      .menubar .mb-right {
+        gap: 10px
       }
     }
 
@@ -503,21 +546,47 @@
       border: 1px solid var(--dock-line)
     }
 
-    .dock i {
+    .dock svg {
       width: 42px;
       height: 42px;
-      border-radius: 11px;
       display: block
     }
 
-    /* ============ the focused window (crisp) ============ */
-    .focus {
+    .grain {
       position: absolute;
+      inset: 0;
+      z-index: 90;
+      pointer-events: none;
+      opacity: .16;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='ng'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23ng)'/%3E%3C/svg%3E");
+      background-size: 200px 200px;
+    }
+
+    /* ============ the focused window (crisp) ============ */
+    .center {
+      position: absolute;
+      inset: 0;
       z-index: 40;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      width: min(462px, 92vw);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 22px;
+      padding: 52px 16px 30px;
+      pointer-events: none;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .center>* {
+      pointer-events: auto;
+      flex-shrink: 0;
+    }
+
+    .focus {
+      position: relative;
+      margin-top: auto;
+      width: min(700px, 94vw);
       border-radius: 26px;
       overflow: hidden;
       background: var(--glass);
@@ -526,9 +595,42 @@
       border: 1px solid var(--glass-border);
       transition: background .5s ease, border-color .3s ease;
       box-shadow: 0 1px 0 rgba(255, 255, 255, .16) inset,
-        0 40px 110px rgba(0, 0, 0, .55),
-        0 0 0 1px rgba(0, 0, 0, .18),
-        0 0 90px -10px var(--glow);
+        0 30px 90px rgba(0, 0, 0, .5),
+        0 0 0 1px rgba(0, 0, 0, .18);
+    }
+
+    .social {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      margin-bottom: auto;
+    }
+
+    .social a {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      color: var(--muted);
+      background: var(--glass);
+      backdrop-filter: blur(20px) saturate(1.2);
+      -webkit-backdrop-filter: blur(20px) saturate(1.2);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 8px 24px -14px rgba(0, 0, 0, .6);
+      transition: color .2s, transform .2s, border-color .2s;
+    }
+
+    .social a:hover {
+      color: var(--ink);
+      transform: translateY(-2px);
+    }
+
+    .social svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+      fill: currentColor;
     }
 
     /* Tahoe toolbar: floating glass, no hard divider, centered title */
@@ -596,7 +698,7 @@
       font-size: 33px;
       line-height: 1.12;
       letter-spacing: -.005em;
-      margin: 22px 0 13px;
+      margin: 0 0 13px;
       color: var(--ink)
     }
 
@@ -609,13 +711,77 @@
       color: var(--muted);
       font-size: 15px;
       line-height: 1.6;
-      margin-bottom: 24px
+      margin-bottom: 0
+    }
+
+    .f-hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      align-items: start;
+      margin: 28px 0 22px;
+    }
+
+    .f-pitch {
+      min-width: 0
+    }
+
+    .f-side {
+      min-width: 0
+    }
+
+    .avail {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+      padding: 5px 12px 5px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--tier-bg);
+      font-family: var(--ui);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .avail .dot {
+      position: relative;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .avail .dot::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: ping 2s cubic-bezier(0, 0, .2, 1) infinite;
+    }
+
+    @keyframes ping {
+      0% {
+        transform: scale(1);
+        opacity: .5
+      }
+
+      80%,
+      100% {
+        transform: scale(2.6);
+        opacity: 0
+      }
     }
 
     .tiers {
       display: grid;
       gap: 9px;
-      margin-bottom: 22px
+      margin-bottom: 0
     }
 
     .tier {
@@ -672,7 +838,7 @@
     }
 
     .tier.active .tier-offer {
-      color: var(--accent-bright)
+      color: var(--phase-accent)
     }
 
     .tier.done {
@@ -724,7 +890,7 @@
       display: block;
       height: 100%;
       border-radius: 6px;
-      background: linear-gradient(90deg, var(--accent), var(--accent-bright))
+      background: var(--phase-bar)
     }
 
     .barlabel {
@@ -759,38 +925,79 @@
       }
     }
 
-    .form {
-      display: flex;
-      gap: 9px
+    /* glowing signup field: email + button in one pill, a light sweeping the border (request 3) */
+    @property --sweep {
+      syntax: "<angle>";
+      initial-value: 0deg;
+      inherits: true;
     }
 
-    .form input {
+    .signup {
+      position: relative;
+      border-radius: 999px;
+      animation: sweep 4.5s linear infinite;
+    }
+
+    .signup::before {
+      /* moving glow bloom, sits behind the field */
+      content: "";
+      position: absolute;
+      inset: -3px;
+      z-index: -1;
+      border-radius: 999px;
+      background: conic-gradient(from var(--sweep),
+          transparent 0deg, transparent 250deg,
+          var(--ring-mid) 298deg, var(--ring-hot) 320deg, var(--ring-mid) 342deg,
+          transparent 360deg);
+      filter: blur(13px);
+      opacity: .9;
+    }
+
+    .signup-ring {
+      /* the crisp animated gradient border */
+      position: relative;
+      border-radius: 999px;
+      padding: 1.5px;
+      background: conic-gradient(from var(--sweep),
+          var(--ring-base) 0deg, var(--ring-base) 210deg,
+          var(--ring-mid) 288deg, var(--ring-hot) 320deg, var(--ring-mid) 352deg,
+          var(--ring-base) 360deg);
+    }
+
+    .signup-inner {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: inherit;
+      background: var(--field-bg);
+      padding: 5px 5px 5px 8px;
+    }
+
+    .signup-input {
       flex: 1;
       min-width: 0;
       height: 46px;
-      padding: 0 16px;
-      border-radius: 12px;
-      background: var(--field);
-      border: 1px solid var(--line);
+      padding: 0 10px;
+      background: transparent;
+      border: none;
+      outline: none;
       color: var(--ink);
       font-family: var(--ui);
-      font-size: 14.5px;
-      outline: none;
-      transition: border-color .2s, background .2s
+      font-size: 15px;
     }
 
-    .form input::placeholder {
+    .signup-input::placeholder {
       color: var(--faint)
     }
 
-    .form input:focus {
-      border-color: var(--accent);
-      background: var(--focus-tint)
+    .signup.err .signup-ring {
+      animation: shake .35s
     }
 
-    .form input.err {
-      border-color: #FF6B63;
-      animation: shake .35s
+    @keyframes sweep {
+      to {
+        --sweep: 360deg
+      }
     }
 
     @keyframes shake {
@@ -809,29 +1016,40 @@
       }
     }
 
-    .form button {
+    .signup-btn {
+      flex: none;
       height: 46px;
       padding: 0 22px;
       border: none;
-      border-radius: 12px;
+      border-radius: 999px;
       cursor: pointer;
-      background: var(--btn-bg);
-      color: var(--btn-text);
+      background: var(--cta-bg);
+      color: var(--cta-text);
       font-family: var(--ui);
       font-weight: 700;
       font-size: 14.5px;
       white-space: nowrap;
-      transition: transform .18s, box-shadow .25s, filter .2s
+      box-shadow: 0 0 0 0 transparent;
+      transition: box-shadow .5s cubic-bezier(.22, 1, .36, 1)
     }
 
-    .form button:hover {
-      transform: translateY(-2px);
-      filter: brightness(1.06);
-      box-shadow: 0 10px 26px -10px rgba(0, 0, 0, .4)
+    .signup-btn:hover {
+      box-shadow: 0 0 0 3px var(--cta-ring);
+      transition: box-shadow .28s cubic-bezier(.22, 1, .36, 1)
     }
 
-    .form button:active {
-      transform: translateY(0)
+    .signup-btn:active {
+      box-shadow: 0 0 0 2px var(--cta-ring)
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .signup {
+        animation: none
+      }
+
+      .avail .dot::after {
+        animation: none
+      }
     }
 
     .micro {
@@ -900,7 +1118,7 @@
 
     .s-tier.free {
       background: var(--free-bg);
-      color: var(--accent-bright);
+      color: var(--phase-accent);
       border: 1px solid var(--free-border)
     }
 
@@ -965,12 +1183,12 @@
       @keyframes popIn {
         0% {
           opacity: 0;
-          transform: translate(-50%, -46%) scale(.965)
+          transform: translateY(10px) scale(.975)
         }
 
         100% {
           opacity: 1;
-          transform: translate(-50%, -50%) scale(1)
+          transform: none
         }
       }
 
@@ -1008,12 +1226,88 @@
         width: 520px
       }
 
+      .center {
+        gap: 16px
+      }
+
       .f-body {
         padding: 20px 20px 20px
       }
 
+      .brandrow {
+        gap: 9px
+      }
+
+      .mark {
+        width: 24px;
+        height: 24px
+      }
+
+      .wordmark {
+        font-size: 23px
+      }
+
+      .f-hero {
+        display: block;
+        margin: 22px 0 16px
+      }
+
+      .f-side {
+        margin-top: 18px
+      }
+
       .headline {
-        font-size: 28px
+        font-size: 27px;
+        margin: 0 0 10px
+      }
+
+      .sub {
+        font-size: 14.5px;
+        line-height: 1.5
+      }
+    }
+
+    @media (max-width:430px) {
+      .brandtag {
+        display: none
+      }
+
+      .f-hero {
+        margin: 18px 0 14px
+      }
+
+      .f-side {
+        margin-top: 14px
+      }
+
+      .headline {
+        font-size: 25px
+      }
+
+      .sub {
+        font-size: 14px
+      }
+
+      .f-body {
+        padding: 18px 17px
+      }
+
+      .tier {
+        padding: 12px 13px
+      }
+
+      .signup-inner {
+        padding: 4px 4px 4px 6px
+      }
+
+      .signup-input {
+        font-size: 14px;
+        padding: 0 8px
+      }
+
+      .signup-btn {
+        padding: 0 16px;
+        font-size: 13.5px
       }
     }
   </style>
@@ -1107,12 +1401,93 @@
       </div>
 
       <div class="dock">
-        <i style="background:linear-gradient(160deg,#5C97F4,#2E63C8)"></i>
-        <i style="background:linear-gradient(160deg,#52C893,#2E9468)"></i>
-        <i style="background:linear-gradient(160deg,#F2768E,#C84E70)"></i>
-        <i style="background:linear-gradient(160deg,#F6B73C,#E0892E)"></i>
-        <i style="background:linear-gradient(160deg,#9586EC,#5B4CC9)"></i>
-        <i style="background:linear-gradient(160deg,#646E82,#3C4454)"></i>
+        <!-- Finder -->
+        <svg viewBox="0 0 100 100">
+          <defs>
+            <linearGradient id="icF" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#27C4FF" />
+              <stop offset="1" stop-color="#1786D8" />
+            </linearGradient>
+          </defs>
+          <rect width="100" height="100" rx="23" fill="url(#icF)" />
+          <ellipse cx="38" cy="40" rx="4.5" ry="9" fill="#0E3F73" />
+          <ellipse cx="62" cy="40" rx="4.5" ry="9" fill="#ffffff" />
+          <path d="M33 63 Q50 76 67 63" stroke="#0E3F73" stroke-width="5" fill="none" stroke-linecap="round" />
+        </svg>
+        <!-- Launchpad -->
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="23" fill="#ECEEF3" />
+          <rect x="22" y="22" width="16" height="16" rx="4" fill="#FF5A52" />
+          <rect x="42" y="22" width="16" height="16" rx="4" fill="#FFB027" />
+          <rect x="62" y="22" width="16" height="16" rx="4" fill="#FFD33A" />
+          <rect x="22" y="42" width="16" height="16" rx="4" fill="#34C759" />
+          <rect x="42" y="42" width="16" height="16" rx="4" fill="#30C8D6" />
+          <rect x="62" y="42" width="16" height="16" rx="4" fill="#0A84FF" />
+          <rect x="22" y="62" width="16" height="16" rx="4" fill="#5E5CE6" />
+          <rect x="42" y="62" width="16" height="16" rx="4" fill="#AF52DE" />
+          <rect x="62" y="62" width="16" height="16" rx="4" fill="#FF2D92" />
+        </svg>
+        <!-- Safari -->
+        <svg viewBox="0 0 100 100">
+          <defs>
+            <radialGradient id="icS" cx="0.5" cy="0.42" r="0.7">
+              <stop offset="0" stop-color="#41A4FF" />
+              <stop offset="1" stop-color="#0A66D6" />
+            </radialGradient>
+          </defs>
+          <rect width="100" height="100" rx="23" fill="url(#icS)" />
+          <circle cx="50" cy="50" r="33" fill="none" stroke="#ffffff" stroke-width="3" opacity="0.92" />
+          <path d="M50 50 L68 32 L57 43 Z" fill="#FF3B30" />
+          <path d="M50 50 L32 68 L43 57 Z" fill="#ffffff" />
+        </svg>
+        <!-- Notes -->
+        <svg viewBox="0 0 100 100">
+          <defs>
+            <clipPath id="icN">
+              <rect width="100" height="100" rx="23" />
+            </clipPath>
+          </defs>
+          <g clip-path="url(#icN)">
+            <rect width="100" height="100" fill="#FCFCFA" />
+            <rect width="100" height="27" fill="#FFD23B" />
+            <rect x="20" y="44" width="60" height="5" rx="2.5" fill="#D7D7D0" />
+            <rect x="20" y="58" width="60" height="5" rx="2.5" fill="#E5E5DE" />
+            <rect x="20" y="72" width="40" height="5" rx="2.5" fill="#E5E5DE" />
+          </g>
+        </svg>
+        <!-- FaceTime -->
+        <svg viewBox="0 0 100 100">
+          <defs>
+            <linearGradient id="icT" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#5DF77B" />
+              <stop offset="1" stop-color="#2AD24C" />
+            </linearGradient>
+          </defs>
+          <rect width="100" height="100" rx="23" fill="url(#icT)" />
+          <rect x="25" y="36" width="35" height="28" rx="7" fill="#ffffff" />
+          <path d="M64 44 L77 35 L77 65 L64 56 Z" fill="#ffffff" />
+        </svg>
+        <!-- Reminders -->
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="23" fill="#FDFDFD" />
+          <circle cx="50" cy="35" r="6.5" fill="#FF3B30" />
+          <circle cx="64" cy="59" r="6.5" fill="#FF9F0A" />
+          <circle cx="36" cy="59" r="6.5" fill="#0A84FF" />
+        </svg>
+        <!-- Photos -->
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="23" fill="#FFFFFF" />
+          <g transform="translate(50,50)">
+            <ellipse cx="0" cy="-17" rx="7.5" ry="17" fill="#FF3B30" opacity="0.85" transform="rotate(0)" />
+            <ellipse cx="0" cy="-17" rx="7.5" ry="17" fill="#FF9F0A" opacity="0.85" transform="rotate(45)" />
+            <ellipse cx="0" cy="-17" rx="7.5" ry="17" fill="#FFD60A" opacity="0.85" transform="rotate(90)" />
+            <ellipse cx="0" cy="-17" rx="7.5" ry="17" fill="#34C759" opacity="0.85" transform="rotate(135)" />
+            <ellipse cx="0" cy="-17" rx="7.5" ry="17" fill="#30C8D6" opacity="0.85" transform="rotate(180)" />
+            <ellipse cx="0" cy="-17" rx="7.5" ry="17" fill="#0A84FF" opacity="0.85" transform="rotate(225)" />
+            <ellipse cx="0" cy="-17" rx="7.5" ry="17" fill="#5E5CE6" opacity="0.85" transform="rotate(270)" />
+            <ellipse cx="0" cy="-17" rx="7.5" ry="17" fill="#FF2D92" opacity="0.85" transform="rotate(315)" />
+          </g>
+        </svg>
       </div>
     </div>
 
@@ -1166,7 +1541,8 @@
     </div>
 
     <!-- ===== the focused window ===== -->
-    <section class="focus" role="dialog" aria-label="Join the Scrim waitlist">
+    <div class="center">
+      <section class="focus" role="dialog" aria-label="Join the Scrim waitlist">
       <div class="f-bar">
         <span class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></span>
         <span class="wtitle">Scrim · Early Access</span>
@@ -1202,24 +1578,32 @@
             </g>
           </svg>
           <span class="wordmark">Scrim</span>
-          <span class="brandtag">Beautiful focus for Mac</span>
+          <span class="avail"><i class="dot"></i>Available July 2026</span>
         </div>
 
-        <h1 class="headline">Everything else <em>fades away.</em></h1>
-        <p class="sub">Scrim softly dims every window, tab, and notification but the one in front of you. What is left
-          is calm, clear, and entirely yours to think in.</p>
+        <div class="f-hero">
+          <div class="f-pitch">
+            <h1 class="headline">The most beautiful way to <em>focus</em> on macOS.</h1>
+            <p class="sub">Scrim gently dims everything except the window in front of you. No blockers, no
+              friction, just a calm, clear space that's entirely yours.</p>
+          </div>
+          <div class="f-side">
+            <div class="tiers" id="tiers"></div>
+          </div>
+        </div>
 
-        <div class="tiers" id="tiers"></div>
-
-        <div class="form">
+        <div class="signup" id="signup">
+          <div class="signup-ring">
+            <div class="signup-inner">
+              <input type="email" id="email" inputmode="email" autocomplete="email" placeholder="Enter your email"
+                aria-label="Your email address" class="signup-input">
+              <button id="join" type="button" class="signup-btn">Join the waitlist</button>
+            </div>
+          </div>
           <input type="text" id="hp" name="company" tabindex="-1" autocomplete="off" aria-hidden="true"
             style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0">
-          <input type="email" id="email" inputmode="email" autocomplete="email" placeholder="you@example.com"
-            aria-label="Your email address">
-          <button id="join" type="button">Join the waitlist</button>
         </div>
-        <p class="micro">No spam, just one quiet email when Scrim arrives. Expected July 2026, made for macOS 15 and
-          later.</p>
+        <p class="micro">No spam, we'll only use your email to send you your offer code, that's all.</p>
       </div>
 
       <div class="success" id="successView">
@@ -1234,6 +1618,18 @@
         <p class="s-foot">Scrim is expected this July. Keep an eye on your inbox.</p>
       </div>
     </section>
+
+      <nav class="social" aria-label="Social links">
+        <a href="https://x.com/GDelmarre" target="_blank" rel="noopener" aria-label="Scrim on X">
+          <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </a>
+        <a href="https://www.threads.com/@guillaume.delmarre" target="_blank" rel="noopener" aria-label="Scrim on Threads">
+          <svg viewBox="0 0 24 24"><path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.589 12c.027 3.086.718 5.496 2.057 7.164 1.43 1.781 3.631 2.695 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798-.31-.71-.873-1.3-1.634-1.75-.192 1.352-.622 2.446-1.284 3.272-.886 1.102-2.14 1.704-3.73 1.79-1.202.065-2.361-.218-3.259-.801-1.063-.689-1.685-1.74-1.752-2.964-.065-1.19.408-2.285 1.33-3.082.88-.76 2.119-1.207 3.583-1.291a13.85 13.85 0 0 1 3.02.142c-.126-.742-.375-1.332-.75-1.757-.513-.586-1.308-.883-2.359-.89h-.029c-.844 0-1.992.232-2.721 1.32L7.734 7.847c.976-1.448 2.6-2.243 4.572-2.243h.041c3.301.02 5.266 2.043 5.456 5.59.108.046.214.094.317.143 1.46.69 2.522 1.728 3.068 3.018.738 1.762.806 4.632-1.557 6.918-1.79 1.748-4.014 2.512-7.013 2.527zm1.235-11.835c-.292 0-.59.008-.892.026-1.65.093-2.674.851-2.609 1.93.062 1.142 1.319 1.673 2.528 1.608 1.111-.06 2.561-.493 2.806-3.348a10.276 10.276 0 0 0-1.833-.216z"/></svg>
+        </a>
+      </nav>
+    </div>
+
+    <div class="grain"></div>
 
   </div>
 
@@ -1256,11 +1652,11 @@
       ENDPOINT: "https://script.google.com/macros/s/AKfycbx_-GhMkIZDwoSg8CDThcLQBHopG56uf2WmqgANqnINHvdmnH5yRVn1oixL6bfS-C92/exec",          // e.g. "https://script.google.com/macros/s/AKfy.../exec"
       signups: 0,            // manual count, used when ENDPOINT is empty
 
-      freeSeats: 50,         // first N people: free
-      halfSeats: 300,        // next N people: 50% off
+      freeSeats: 100,        // first N people: free
+      halfSeats: 300,        // next N people: 60% off
       currency: "$",
       price: 9.99,           // regular price
-      halfPrice: 4.99,       // shown for the 50% off tier
+      halfPrice: 3.99,       // shown for the 60% off tier
       laterPrice: 6.99       // shown for the 30% off tier
     };
 
@@ -1275,14 +1671,14 @@
     function statusLabel(f) { return f >= 0.8 ? "Almost full" : f >= 0.45 ? "Filling up fast" : "Just opened"; }
     function tiers() {
       return {
-        free: { rank: "The first 50", offer: "Free, forever", now: null, was: CONFIG.price },
-        half: { rank: "The next 300", offer: "50% off", now: CONFIG.halfPrice, was: CONFIG.price },
+        free: { rank: "Early birds", offer: "Free, forever", now: null, was: CONFIG.price },
+        half: { rank: "The next 300", offer: "60% off", now: CONFIG.halfPrice, was: CONFIG.price },
         later: { rank: "After that", offer: "30% off", now: CONFIG.laterPrice, was: CONFIG.price }
       };
     }
     function priceHTML(d) {
       return d.now === null
-        ? '<div class="tier-price"><span class="was">' + money(d.was) + '</span><span>free in early access</span></div>'
+        ? '<div class="tier-price"><span class="was">' + money(d.was) + '</span><span>Free for the first 100 users</span></div>'
         : '<div class="tier-price"><span class="now">' + money(d.now) + '</span><span class="was">' + money(d.was) + '</span></div>';
     }
 
@@ -1329,12 +1725,12 @@
       const d = t[key], badge = $("tierBadge"), price = $("sPrice"), msg = $("sMsg");
       if (key === "free") {
         badge.textContent = "Free, forever"; badge.className = "s-tier free";
-        price.innerHTML = '<span class="was">' + money(d.was) + '</span><span>free in early access</span>';
-        msg.innerHTML = "You are one of our first 50. Your free copy of Scrim will be waiting for you the day it ships.";
+        price.innerHTML = '<span class="was">' + money(d.was) + '</span><span>Free for the first 100 users</span>';
+        msg.innerHTML = "You are one of our first 100. Your free copy of Scrim will be waiting for you the day it ships.";
       } else if (key === "half") {
-        badge.textContent = "50% off"; badge.className = "s-tier disc";
+        badge.textContent = "60% off"; badge.className = "s-tier disc";
         price.innerHTML = '<span class="now">' + money(d.now) + '</span><span class="was">' + money(d.was) + '</span>';
-        msg.innerHTML = "You got in early. We will email your <strong>50% off</strong> code the day Scrim ships.";
+        msg.innerHTML = "You got in early. We will email your <strong>60% off</strong> code the day Scrim ships.";
       } else {
         badge.textContent = "30% off"; badge.className = "s-tier disc";
         price.innerHTML = '<span class="now">' + money(d.now) + '</span><span class="was">' + money(d.was) + '</span>';
@@ -1364,8 +1760,9 @@
       if ($("hp").value) return;                 // honeypot: ignore bots
       const v = emailEl.value.trim();
       if (!valid(v)) {
-        emailEl.classList.add("err"); emailEl.focus();
-        setTimeout(() => emailEl.classList.remove("err"), 400);
+        const f = $("signup");
+        f.classList.add("err"); emailEl.focus();
+        setTimeout(() => f.classList.remove("err"), 400);
         return;
       }
       const btn = $("join"), label = btn.textContent;
